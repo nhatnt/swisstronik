@@ -6,7 +6,7 @@ async function main() {
    * @dev the second argument must be the message we want to set in the contract during the deployment process
    */
   const contract = await hre.ethers.deployContract("Swisstronik", [
-    "Hello Swisstronik from Chien",
+    "Hello Swisstronik from me",
   ]);
 
   await contract.waitForDeployment();
