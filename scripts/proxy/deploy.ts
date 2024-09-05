@@ -2,6 +2,7 @@ import "@nomiclabs/hardhat-ethers";
 import { ethers } from "hardhat";
 import fs from "fs";
 import path from "path";
+const hre = require("hardhat");
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -27,6 +28,28 @@ async function main() {
   await SWTRProxy.waitForDeployment();
   console.log(`SWTRProxy deployed to ${SWTRProxy.target}`);
 
+  try {
+    await hre.run("verify:verify", {
+      address: SWTRProxy.target,
+      contract: `contracts/proxy/SWTRProxy.sol:SWTRProxy`,
+      constructorArguments: [
+        SWTRImplementation.target,
+        ProxyAdmin.target,
+        SWTRImplementation.interface.encodeFunctionData("initialize", [
+          signer.address,
+        ]),
+      ],
+    });
+    console.log(
+      "Contract verified to",
+      hre.config.etherscan.customChains[0].urls.browserURL +
+        "/address/" +
+        SWTRProxy.target
+    );
+  } catch (err) {
+    console.error("Error veryfing Contract. Reason:", err);
+  }
+
   const deployedProxyAddressWithExplorer = `${__dirname}/utils/address-with-explorer.txt`;
   fs.writeFileSync(
     deployedProxyAddressWithExplorer,
@@ -47,6 +70,7 @@ async function main() {
   fs.writeFileSync(deployedAddressPath, fileContent, { encoding: "utf8" });
   console.log("Address written to deployed-address.ts");
 }
+// npx hardhat run scripts/proxy/deploy.ts --network swisstronik
 
 main()
   .then(() => process.exit(0))
